@@ -1,0 +1,46 @@
+/* --- Global Theme --- */
+.stApp {
+    background-color: #0e1117; /* Very dark blue-grey */
+    color: #fafafa;
+}
+
+/* --- Metric Cards (KPIs) --- */
+/* Makes the st.metric look like a trading card */
+div[data-testid="stMetric"] {
+    background-color: #1f2937; /* Dark Grey */
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #374151;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Metric Label (Small text above number) */
+div[data-testid="stMetricLabel"] {
+    color: #9ca3af; /* Light Grey */
+    font-size: 0.9rem;
+}
+
+/* Metric Value (The big number) */
+div[data-testid="stMetricValue"] {
+    color: #e5e7eb; /* White */
+    font-family: 'Roboto Mono', monospace; /* Tech font */
+}
+
+/* --- Buttons --- */
+/* Institutional Green for primary actions */
+div.stButton > button:first-child {
+    background-color: #059669; 
+    color: white;
+    border-radius: 5px;
+    border: none;
+    font-weight: bold;
+}
+div.stButton > button:hover {
+    background-color: #10b981;
+    border: none;
+}
+
+/* --- Sidebar --- */
+section[data-testid="stSidebar"] {
+    background-color: #111827; /* Slightly darker than main */
+}
