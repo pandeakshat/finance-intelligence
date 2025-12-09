@@ -88,7 +88,84 @@ if selected_ticker:
             value=f"{sharpe:.2f}",
             help="Risk-adjusted return. > 1.0 is considered good. < 0 means you are taking risk for no return."
         )
+    st.markdown("---")
+
+    # --- NEW FEATURE: MONTE CARLO SIMULATION ---
+    st.subheader("🎲 Monte Carlo Simulation: Next 30 Days")
+    st.caption("We simulated 1,000 possible market scenarios based on historical volatility to estimate your probability of profit.")
+
+    import numpy as np
+    
+    # 1. Setup Simulation Parameters
+    days_to_simulate = 30
+    iterations = 1000
+    
+    # Get last closing price and daily volatility
+    last_price = df['Close'].iloc[-1]
+    daily_vol = df['Returns'].std()
+    
+    # 2. Run Simulation (The Math)
+    # Formula: Price * exp( (mean - 0.5 * vol^2) + vol * random_shock )
+    simulation_df = pd.DataFrame()
+    
+    # Generate random shocks
+    daily_returns = np.random.normal(
+        loc=0, # Assuming zero mean drift for short term (conservative)
+        scale=daily_vol, 
+        size=(days_to_simulate, iterations)
+    )
+    
+    # Calculate price paths
+    price_paths = np.zeros_like(daily_returns)
+    price_paths[0] = last_price
+    
+    for t in range(1, days_to_simulate):
+        price_paths[t] = price_paths[t-1] * (1 + daily_returns[t])
         
+    # 3. Visualization (Spaghetti Plot)
+    fig_mc = go.Figure()
+    
+    # Plot first 50 paths to avoid lag, but calculate stats on all 1000
+    for i in range(50):
+        fig_mc.add_trace(go.Scatter(
+            y=price_paths[:, i], 
+            mode='lines', 
+            line=dict(color='rgba(0, 240, 255, 0.1)'), # Transparent Cyan
+            showlegend=False
+        ))
+        
+    # Add Average Path
+    fig_mc.add_trace(go.Scatter(
+        y=np.mean(price_paths, axis=1), 
+        mode='lines', 
+        name="Average Outcome",
+        line=dict(color='white', width=2)
+    ))
+
+    fig_mc.update_layout(
+        title=f"1,000 Simulated Futures for {selected_ticker}",
+        xaxis_title="Days into Future",
+        yaxis_title="Price ($)",
+        template="plotly_dark",
+        height=400
+    )
+    st.plotly_chart(fig_mc, use_container_width=True)
+
+    # 4. Success Probabilities
+    final_prices = price_paths[-1]
+    profitable_scenarios = len(final_prices[final_prices > last_price])
+    prob_profit = profitable_scenarios / iterations
+
+    # Display Results
+    col_mc1, col_mc2, col_mc3 = st.columns(3)
+    
+    col_mc1.metric("Starting Price", f"${last_price:,.2f}")
+    col_mc2.metric("Avg. Simulated Price", f"${np.mean(final_prices):,.2f}")
+    
+    # Color logic for probability
+    prob_color = "normal" if prob_profit > 0.5 else "off"
+    col_mc3.metric("Probability of Profit", f"{prob_profit:.1%}", help="Likelihood of ending higher than today based on volatility.")
+    
     st.markdown("---")
     
     # 4. Visualization: The Fat Tail Histogram
